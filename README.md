@@ -13,7 +13,8 @@ A Neural Network Regression Model uses multiple layers of neurons to learn these
 
 ## Neural Network Model
 
-<img width="869" height="713" alt="image" src="https://github.com/user-attachments/assets/bec82200-a092-45c8-a3f1-f988e7eac296" />
+<img width="1265" height="725" alt="image" src="https://github.com/user-attachments/assets/ef73cd9e-726a-48aa-ba36-c57481123895" />
+
 
 
 ## DESIGN STEPS
@@ -50,56 +51,95 @@ Evaluate the model with the testing data.
 ### Name: MOHAMMAD FAIZAL SK
 ### Register Number: 212223240092
 ```python
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+
+data = pd.read_csv("EX01_DATASET - Sheet1.csv")
+
+X = data[['UNIT']].values
+y = data[['BILL']].values
+
+print("Dataset Information")
+print(data)
+
+scaler_X = StandardScaler()
+scaler_y = StandardScaler()
+
+X_scaled = scaler_X.fit_transform(X)
+y_scaled = scaler_y.fit_transform(y)
+
+X_tensor = torch.tensor(X_scaled, dtype=torch.float32)
+y_tensor = torch.tensor(y_scaled, dtype=torch.float32)
+
 class NeuralNet(nn.Module):
     def __init__(self):
         super().__init__()
-        self.fc1 = nn.Linear(1, 16)
-        self.fc2 = nn.Linear(16, 8)
-        self.fc3 = nn.Linear(8, 4)
-        self.fc4 = nn.Linear(4, 1)
+        self.fc1 = nn.Linear(1,8)
+        self.fc2 = nn.Linear(8,7)
+        self.fc3 = nn.Linear(7,6)
+        self.fc4 = nn.Linear(6,1)
 
-    def forward(self, x):
+    def forward(self,x):
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
         x = torch.relu(self.fc3(x))
         x = self.fc4(x)
         return x
 
-
-# Initialize the Model, Loss Function, and Optimizer
-model = NeuralNet()
+faizal_model = NeuralNet()
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.01)
+optimizer = optim.Adam(faizal_model.parameters(), lr=0.01)
 
-def train_model(nethraa_brain, X_train, y_train, criterion, optimizer, epochs=2000):
-    losses = []
+losses = []
 
-    for epoch in range(epochs):
-        optimizer.zero_grad()
-        output = nethraa_brain(X_train)
-        loss = criterion(output, y_train)
-        loss.backward()
-        optimizer.step()
-        losses.append(loss.item())
+for epoch in range(2000):
+    optimizer.zero_grad()
+    output = faizal_model(X_tensor)
+    loss = criterion(output, y_tensor)
+    loss.backward()
+    optimizer.step()
+    losses.append(loss.item())
 
-    return losses
+plt.plot(losses)
+plt.title("Training Loss vs Iteration")
+plt.xlabel("Iterations")
+plt.ylabel("Loss")
+plt.show()
 
+sample_units = float(input("Enter Units to Predict Bill: "))
+sample = [[sample_units]]
+
+sample_scaled = scaler_X.transform(sample)
+sample_tensor = torch.tensor(sample_scaled, dtype=torch.float32)
+
+with torch.no_grad():
+    pred = faizal_model(sample_tensor)
+
+predicted_bill = scaler_y.inverse_transform(pred.numpy())
+
+print("Units:", sample_units)
+print("Predicted Bill:", predicted_bill[0][0])
 ```
 ## Dataset Information
+<img width="687" height="241" alt="image" src="https://github.com/user-attachments/assets/947aa0e9-251c-4fd5-aab0-e4803f0b3b56" />
 
-<img width="196" height="351" alt="image" src="https://github.com/user-attachments/assets/81525732-5cf7-433b-9b70-56cd7cf89865" />
 
 
 ## OUTPUT
 
 ### Training Loss Vs Iteration Plot
 
-<img width="686" height="555" alt="image" src="https://github.com/user-attachments/assets/a4845d31-00fe-48da-b18f-7d15bd9459c4" />
+<img width="800" height="504" alt="image" src="https://github.com/user-attachments/assets/ca05e924-68b5-431d-94ef-45d419477e66" />
+
 
 
 ### New Sample Data Prediction
+<img width="402" height="76" alt="image" src="https://github.com/user-attachments/assets/76b61d47-de08-4914-ad2a-99d5c2c79613" />
 
-<img width="793" height="400" alt="image" src="https://github.com/user-attachments/assets/5d566fda-2ea2-4352-a96f-d9b8c625496b" />
 
 
 ## RESULT
