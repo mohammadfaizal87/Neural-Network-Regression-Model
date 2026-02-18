@@ -55,74 +55,84 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
 
-data = pd.read_csv("EX01_DATASET - Sheet1.csv")
+name = "MOHAMMAD FAIZAL SK"
+register_number = "212223240092"
 
-X = data[['UNIT']].values
-y = data[['BILL']].values
+dataset1 = pd.read_csv('/content/EX01_DATASET - Sheet1.csv')
+X = dataset1[['UNIT']].values
+y = dataset1[['BILL']].values
 
-print("Dataset Information")
-print(data)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=33)
 
-scaler_X = StandardScaler()
-scaler_y = StandardScaler()
+scaler = MinMaxScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
 
-X_scaled = scaler_X.fit_transform(X)
-y_scaled = scaler_y.fit_transform(y)
+X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
+y_train_tensor = torch.tensor(y_train, dtype=torch.float32).view(-1, 1)
+X_test_tensor = torch.tensor(X_test, dtype=torch.float32)
+y_test_tensor = torch.tensor(y_test, dtype=torch.float32).view(-1, 1)
 
-X_tensor = torch.tensor(X_scaled, dtype=torch.float32)
-y_tensor = torch.tensor(y_scaled, dtype=torch.float32)
-
-class NeuralNet(nn.Module):
+class FAIZAL_MODEL(nn.Module):
     def __init__(self):
         super().__init__()
-        self.fc1 = nn.Linear(1,8)
-        self.fc2 = nn.Linear(8,7)
-        self.fc3 = nn.Linear(7,6)
-        self.fc4 = nn.Linear(6,1)
+        self.fc1 = nn.Linear(1, 8)
+        self.fc2 = nn.Linear(8, 7)
+        self.fc3 = nn.Linear(7, 6)
+        self.fc4 = nn.Linear(6, 1)
+        self.history = {'loss': []}
 
-    def forward(self,x):
+    def forward(self, x):
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
         x = torch.relu(self.fc3(x))
         x = self.fc4(x)
         return x
 
-faizal_model = NeuralNet()
+ai_brain = FAIZAL_MODEL()
 criterion = nn.MSELoss()
-optimizer = optim.Adam(faizal_model.parameters(), lr=0.01)
+optimizer = optim.Adam(ai_brain.parameters(), lr=0.01)
 
-losses = []
+def train_model(ai_brain, X_train, y_train, criterion, optimizer, epochs=2000):
 
-for epoch in range(2000):
-    optimizer.zero_grad()
-    output = faizal_model(X_tensor)
-    loss = criterion(output, y_tensor)
-    loss.backward()
-    optimizer.step()
-    losses.append(loss.item())
+    for epoch in range(epochs):
 
-plt.plot(losses)
-plt.title("Training Loss vs Iteration")
-plt.xlabel("Iterations")
-plt.ylabel("Loss")
-plt.show()
+        optimizer.zero_grad()
 
-sample_units = float(input("Enter Units to Predict Bill: "))
-sample = [[sample_units]]
+        output = ai_brain(X_train)
+        loss = criterion(output, y_train)
 
-sample_scaled = scaler_X.transform(sample)
-sample_tensor = torch.tensor(sample_scaled, dtype=torch.float32)
+        loss.backward()
+        optimizer.step()
+
+        ai_brain.history['loss'].append(loss.item())
+
+        if epoch % 200 == 0:
+            print(f'Epoch [{epoch}/{epochs}], Loss: {loss.item():.6f}')
+
+train_model(ai_brain, X_train_tensor, y_train_tensor, criterion, optimizer)
 
 with torch.no_grad():
-    pred = faizal_model(sample_tensor)
+    test_loss = criterion(ai_brain(X_test_tensor), y_test_tensor)
+    print(f'Test Loss: {test_loss.item():.6f}')
 
-predicted_bill = scaler_y.inverse_transform(pred.numpy())
+loss_df = pd.DataFrame(ai_brain.history)
 
-print("Units:", sample_units)
-print("Predicted Bill:", predicted_bill[0][0])
+loss_df.plot()
+plt.xlabel("Epochs")
+plt.ylabel("Loss")
+plt.title("Loss during Training")
+plt.show()
+
+X_n1_1 = torch.tensor([[9]], dtype=torch.float32)
+prediction = ai_brain(torch.tensor(scaler.transform(X_n1_1), dtype=torch.float32)).item()
+
+
+print(f'Prediction: {prediction}')
 ```
 ## Dataset Information
 <img width="687" height="241" alt="image" src="https://github.com/user-attachments/assets/947aa0e9-251c-4fd5-aab0-e4803f0b3b56" />
@@ -130,15 +140,18 @@ print("Predicted Bill:", predicted_bill[0][0])
 
 
 ## OUTPUT
+<img width="817" height="235" alt="image" src="https://github.com/user-attachments/assets/76dede64-0f4e-4338-bf2b-3dd94669b340" />
 
 ### Training Loss Vs Iteration Plot
 
-<img width="800" height="504" alt="image" src="https://github.com/user-attachments/assets/ca05e924-68b5-431d-94ef-45d419477e66" />
+<img width="832" height="499" alt="image" src="https://github.com/user-attachments/assets/ecfe2689-dfba-4406-9dbe-08ec09989ca0" />
+
 
 
 
 ### New Sample Data Prediction
-<img width="402" height="76" alt="image" src="https://github.com/user-attachments/assets/76b61d47-de08-4914-ad2a-99d5c2c79613" />
+<img width="835" height="51" alt="image" src="https://github.com/user-attachments/assets/48ad6516-ad40-4fc3-9ab5-c4ecc81226df" />
+
 
 
 
